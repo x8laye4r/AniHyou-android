@@ -61,14 +61,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -76,6 +74,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.axiel7.anihyou.core.base.CUSTOM_URL_NAME_PLACEHOLDER
 import com.axiel7.anihyou.core.common.utils.ContextUtils.copyToClipBoard
 import com.axiel7.anihyou.core.common.utils.ContextUtils.openActionView
+import com.axiel7.anihyou.core.common.utils.ContextUtils.openShareSheet
 import com.axiel7.anihyou.core.common.utils.NumberUtils.format
 import com.axiel7.anihyou.core.common.utils.StringUtils.htmlStripped
 import com.axiel7.anihyou.core.common.utils.StringUtils.orUnknown
@@ -85,6 +84,7 @@ import com.axiel7.anihyou.core.model.media.durationText
 import com.axiel7.anihyou.core.model.media.isAnime
 import com.axiel7.anihyou.core.model.media.localized
 import com.axiel7.anihyou.core.model.media.siteUrlWithTitle
+import com.axiel7.anihyou.core.network.type.MediaStatus
 import com.axiel7.anihyou.core.network.type.MediaType
 import com.axiel7.anihyou.core.resources.ColorUtils.colorFromHex
 import com.axiel7.anihyou.core.resources.R
@@ -104,7 +104,6 @@ import com.axiel7.anihyou.core.ui.composables.common.BackIconButton
 import com.axiel7.anihyou.core.ui.composables.common.ErrorDialogHandler
 import com.axiel7.anihyou.core.ui.composables.common.FavoriteIconButton
 import com.axiel7.anihyou.core.ui.composables.common.IconButtonWithMenu
-import com.axiel7.anihyou.core.ui.composables.common.ShareIconButton
 import com.axiel7.anihyou.core.ui.composables.common.TranslateIconButton
 import com.axiel7.anihyou.core.ui.composables.common.singleClick
 import com.axiel7.anihyou.core.ui.composables.defaultPlaceholder
@@ -130,7 +129,6 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
 import com.materialkolor.dynamiccolor.ColorSpec
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -257,8 +255,8 @@ private fun MediaDetailsContent(
                 icon = R.drawable.notifications_24,
                 enabled = uiState.details?.basicMediaDetails?.episodes != null,
                 shape = bottomShape,
-                modifier = Modifier.padding(bottom = 8.dp)
             )
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 
@@ -311,7 +309,7 @@ private fun MediaDetailsContent(
                     ) { onDismiss ->
                         DropdownMenuItem(
                             onClick = {
-                                uiState.details?.siteUrlWithTitle().orEmpty()
+                                context.openShareSheet(uiState.details?.siteUrlWithTitle().orEmpty())
                                 onDismiss()
                             },
                             text = { Text(text = stringResource(R.string.share)) },
@@ -324,7 +322,8 @@ private fun MediaDetailsContent(
                             }
                         )
 
-                        if (uiState.isLoggedIn) {
+                        val correctStatus = uiState.details?.status == MediaStatus.RELEASING || uiState.details?.status == MediaStatus.NOT_YET_RELEASED
+                        if (uiState.isLoggedIn && uiState.details?.basicMediaDetails?.type == MediaType.ANIME && correctStatus) {
                             DropdownMenuItem(
                                 onClick = {
                                     showNotificationSheet = true
@@ -335,7 +334,6 @@ private fun MediaDetailsContent(
                                     Icon(
                                         painter = painterResource(R.drawable.notifications_active_filled_24),
                                         contentDescription = stringResource(R.string.notifications),
-                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             )
