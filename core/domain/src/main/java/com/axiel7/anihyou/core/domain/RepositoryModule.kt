@@ -37,4 +37,5 @@ val repositoryModule = module {
     single<StudioRepository>()
     single<ThreadRepository>()
     single<UserRepository>()
+    single<AnimeNotificationsRepository>()
 }
