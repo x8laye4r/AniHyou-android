@@ -77,6 +77,7 @@ import com.axiel7.anihyou.core.common.utils.ContextUtils.copyToClipBoard
 import com.axiel7.anihyou.core.common.utils.ContextUtils.openActionView
 import com.axiel7.anihyou.core.common.utils.ContextUtils.openShareSheet
 import com.axiel7.anihyou.core.common.utils.NumberUtils.format
+import com.axiel7.anihyou.core.common.utils.NumberUtils.isGreaterThanZero
 import com.axiel7.anihyou.core.common.utils.StringUtils.htmlStripped
 import com.axiel7.anihyou.core.common.utils.StringUtils.orUnknown
 import com.axiel7.anihyou.core.model.Theme
@@ -85,7 +86,6 @@ import com.axiel7.anihyou.core.model.media.durationText
 import com.axiel7.anihyou.core.model.media.isAnime
 import com.axiel7.anihyou.core.model.media.localized
 import com.axiel7.anihyou.core.model.media.siteUrlWithTitle
-import com.axiel7.anihyou.core.network.type.MediaStatus
 import com.axiel7.anihyou.core.network.type.MediaType
 import com.axiel7.anihyou.core.resources.ColorUtils.colorFromHex
 import com.axiel7.anihyou.core.resources.R
@@ -130,7 +130,6 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
 import com.materialkolor.dynamiccolor.ColorSpec
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -237,6 +236,9 @@ private fun MediaDetailsContent(
                 SwitchPreference(
                     title = type.localized(),
                     preferenceValue = uiState.allowNotifications(type),
+                    enabled = if (type == AiringNotificationType.END) {
+                        uiState.details?.basicMediaDetails?.episodes.isGreaterThanZero()
+                    } else true,
                     onValueChange = { event?.changeNotificationAllowance(type, it) },
                     icon = type.icon,
                     shape = when (index) {
