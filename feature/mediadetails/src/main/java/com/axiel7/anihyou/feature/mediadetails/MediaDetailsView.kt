@@ -314,8 +314,7 @@ private fun MediaDetailsContent(
                             }
                         )
 
-                        val correctStatus = uiState.details?.status == MediaStatus.RELEASING || uiState.details?.status == MediaStatus.NOT_YET_RELEASED
-                        if (uiState.isLoggedIn && uiState.details?.basicMediaDetails?.type == MediaType.ANIME && correctStatus) {
+                        if (uiState.showNotificationSettings) {
                             DropdownMenuItem(
                                 onClick = {
                                     showNotificationSheet = true

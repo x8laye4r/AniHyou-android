@@ -17,6 +17,8 @@ import com.axiel7.anihyou.core.network.fragment.MediaCharacter
 import com.axiel7.anihyou.core.network.fragment.MediaStaff
 import com.axiel7.anihyou.core.base.state.UiState
 import com.axiel7.anihyou.core.model.TranslatorApp
+import com.axiel7.anihyou.core.network.type.MediaStatus
+import com.axiel7.anihyou.core.network.type.MediaType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -37,6 +39,7 @@ data class MediaDetailsUiState(
     val selectedCharacterVoiceActors: ImmutableList<CommonVoiceActor>? = null,
     val showVoiceActorsSheet: Boolean = false,
 
+    val notificationsEnabled: Boolean = false,
     val allowStartNotifications: Boolean = true,
     val allowAiringNotifications: Boolean = true,
     val allowEndNotifications: Boolean = false,
@@ -71,6 +74,11 @@ data class MediaDetailsUiState(
     val isNewEntry = details?.mediaListEntry == null
 
     val hasSpoilerTags = details?.tags?.any { it?.isMediaSpoiler == true } ?: false
+
+    val showNotificationSettings = isLoggedIn
+            && notificationsEnabled
+            && details?.basicMediaDetails?.type == MediaType.ANIME
+            && (details.status == MediaStatus.RELEASING || details.status == MediaStatus.NOT_YET_RELEASED)
 
     fun allowNotifications(type: AiringNotificationType) = when (type) {
         AiringNotificationType.START -> allowStartNotifications

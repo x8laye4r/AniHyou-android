@@ -358,6 +358,12 @@ class MediaDetailsViewModel(
             }
             .launchIn(viewModelScope)
 
+        defaultPreferencesRepository.isNotificationsEnabled
+            .onEach { value ->
+                mutableUiState.update { it.copy(notificationsEnabled = value) }
+            }
+            .launchIn(viewModelScope)
+
         mutableUiState
             .mapNotNull { it.details?.basicMediaDetails?.type }
             .distinctUntilChanged()
