@@ -50,6 +50,7 @@ import com.axiel7.anihyou.core.ui.utils.ComposeDateUtils.minutesToLegibleText
 import com.materialkolor.ktx.harmonize
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import java.io.File.separator
 
 @Composable
 fun MediaItemHorizontal(
@@ -194,8 +195,8 @@ fun MediaItemHorizontal(
     title: String,
     imageUrl: String?,
     blurImage: Boolean,
-    score: Int,
-    format: MediaFormat,
+    score: Int?,
+    format: MediaFormat?,
     year: Int?,
     mediaStatus: MediaStatus?,
     episodes: Int?,
@@ -214,12 +215,9 @@ fun MediaItemHorizontal(
         blurImage = blurImage,
         subtitle1 = {
             Row {
+                val infos = listOf(format?.localized(), year?.toString(), mediaStatus?.localized())
                 Text(
-                    text = buildString {
-                        append(format.localized())
-                        year?.let { append(" · $year") }
-                        mediaStatus?.let { append(" · ${mediaStatus.localized()}") }
-                    },
+                    text = infos.filterNotNull().joinToString(separator = " · "),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -230,25 +228,28 @@ fun MediaItemHorizontal(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SmallScoreIndicator(
-                    score = score,
-                )
+                score?.let {
+                    SmallScoreIndicator(score = it)
+                }
                 if (chapters != null) {
                     Text(
                         text = pluralStringResource(R.plurals.num_chapters, chapters, chapters),
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else if (episodes == null || episodes <= 1) {
                     duration?.let {
                         Text(
                             text = duration.toLong().minutesToLegibleText(),
-                            style = MaterialTheme.typography.labelMedium
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 } else {
                     Text(
                         text = pluralStringResource(R.plurals.num_episodes, episodes, episodes),
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -263,6 +264,7 @@ fun MediaItemHorizontal(
                         Text(
                             text = genre.genreTagLocalized(),
                             style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
