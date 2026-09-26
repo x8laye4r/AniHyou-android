@@ -37,6 +37,10 @@ data class MediaDetailsUiState(
     val selectedCharacterVoiceActors: ImmutableList<CommonVoiceActor>? = null,
     val showVoiceActorsSheet: Boolean = false,
 
+    val allowStartNotifications: Boolean = true,
+    val allowAiringNotifications: Boolean = true,
+    val allowEndNotifications: Boolean = false,
+
     val relationsAndRecommendations: MediaRelationsAndRecommendations? = null,
 
     val isSuccessStats: Boolean = false,

@@ -36,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -60,12 +61,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -91,9 +94,11 @@ import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
 import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
 import com.axiel7.anihyou.core.ui.common.navigation.Route
 import com.axiel7.anihyou.core.ui.composables.ConnectedButtonGroup
+import com.axiel7.anihyou.core.ui.composables.SwitchPreference
 import com.axiel7.anihyou.core.ui.composables.TextIconHorizontal
 import com.axiel7.anihyou.core.ui.composables.TextSubtitleVertical
 import com.axiel7.anihyou.core.ui.composables.TopBannerView
+import com.axiel7.anihyou.core.ui.composables.bottomShape
 import com.axiel7.anihyou.core.ui.composables.character.CharacterVoiceActorsSheet
 import com.axiel7.anihyou.core.ui.composables.common.BackIconButton
 import com.axiel7.anihyou.core.ui.composables.common.ErrorDialogHandler
@@ -106,9 +111,11 @@ import com.axiel7.anihyou.core.ui.composables.defaultPlaceholder
 import com.axiel7.anihyou.core.ui.composables.media.MEDIA_POSTER_BIG_HEIGHT
 import com.axiel7.anihyou.core.ui.composables.media.MEDIA_POSTER_BIG_WIDTH
 import com.axiel7.anihyou.core.ui.composables.media.MediaPoster
+import com.axiel7.anihyou.core.ui.composables.middleShape
 import com.axiel7.anihyou.core.ui.composables.sheet.SelectionSheet
 import com.axiel7.anihyou.core.ui.composables.sheet.SelectionSheetItem
 import com.axiel7.anihyou.core.ui.composables.spoilerPlaceholder
+import com.axiel7.anihyou.core.ui.composables.topShape
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
 import com.axiel7.anihyou.core.ui.utils.ComposeDateUtils.secondsToLegibleText
 import com.axiel7.anihyou.core.ui.utils.StringUtils.htmlDecoded
@@ -123,6 +130,8 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
 import com.materialkolor.dynamiccolor.ColorSpec
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -180,6 +189,7 @@ private fun MediaDetailsContent(
         derivedStateOf { topAppBarScrollBehavior.state.overlappedFraction == 1f }
     }
     var showEditSheet by rememberSaveable { mutableStateOf(false) }
+    var showNotificationSheet by rememberSaveable { mutableStateOf(false) }
 
     var isSynopsisExpanded by rememberSaveable { mutableStateOf(false) }
     val maxLinesSynopsis by remember {
@@ -215,6 +225,41 @@ private fun MediaDetailsContent(
             },
             onDismissed = { showEditSheet = false }
         )
+    }
+
+    if (showNotificationSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showNotificationSheet = false
+                scope.launch {
+                    event?.writeNotificationAllowanceToDatabase()
+                }
+            },
+        ) {
+            SwitchPreference(
+                title = stringResource(R.string.allow_start_notification),
+                preferenceValue = uiState.allowStartNotifications,
+                onValueChange = { event?.changeNotificationAllowance(NotificationType.START, it) },
+                icon = R.drawable.notifications_24,
+                shape = topShape,
+            )
+            SwitchPreference(
+                title = stringResource(R.string.allow_airing_notification),
+                preferenceValue = uiState.allowAiringNotifications,
+                onValueChange = { event?.changeNotificationAllowance(NotificationType.AIRING, it) },
+                icon = R.drawable.notifications_24,
+                shape = middleShape,
+            )
+            SwitchPreference(
+                title = stringResource(R.string.allow_end_notification),
+                preferenceValue = uiState.allowEndNotifications,
+                onValueChange = { event?.changeNotificationAllowance(NotificationType.END, it) },
+                icon = R.drawable.notifications_24,
+                enabled = uiState.details?.basicMediaDetails?.episodes != null,
+                shape = bottomShape,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
     }
 
     if (uiState.showVoiceActorsSheet) {
@@ -260,9 +305,42 @@ private fun MediaDetailsContent(
                             }
                         )
                     }
-                    ShareIconButton(
-                        url = { uiState.details?.siteUrlWithTitle().orEmpty() }
-                    )
+                    IconButtonWithMenu(
+                        icon = R.drawable.more_vert_24,
+                        contentDescription = stringResource(R.string.show_more)
+                    ) { onDismiss ->
+                        DropdownMenuItem(
+                            onClick = {
+                                uiState.details?.siteUrlWithTitle().orEmpty()
+                                onDismiss()
+                            },
+                            text = { Text(text = stringResource(R.string.share)) },
+                            leadingIcon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.share_24),
+                                    contentDescription = stringResource(R.string.share),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        )
+
+                        if (uiState.isLoggedIn) {
+                            DropdownMenuItem(
+                                onClick = {
+                                    showNotificationSheet = true
+                                    onDismiss()
+                                },
+                                text = { Text(text = stringResource(R.string.notifications)) },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(R.drawable.notifications_active_filled_24),
+                                        contentDescription = stringResource(R.string.notifications),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            )
+                        }
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,

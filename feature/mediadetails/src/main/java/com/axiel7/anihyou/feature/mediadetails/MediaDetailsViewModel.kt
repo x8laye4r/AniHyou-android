@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.axiel7.anihyou.core.base.DataResult
 import com.axiel7.anihyou.core.base.PagedResult
 import com.axiel7.anihyou.core.common.viewmodel.UiStateViewModel
+import com.axiel7.anihyou.core.domain.repository.AnimeNotificationsRepository
 import com.axiel7.anihyou.core.domain.repository.DefaultPreferencesRepository
 import com.axiel7.anihyou.core.domain.repository.FavoriteRepository
 import com.axiel7.anihyou.core.domain.repository.MediaRepository
@@ -36,6 +37,7 @@ class MediaDetailsViewModel(
     defaultPreferencesRepository: DefaultPreferencesRepository,
     private val mediaRepository: MediaRepository,
     private val favoriteRepository: FavoriteRepository,
+    private val animeNotificationsRepository: AnimeNotificationsRepository,
 ) : UiStateViewModel<MediaDetailsUiState>(), MediaDetailsEvent {
 
     override val initialState = MediaDetailsUiState(isLoggedIn = arguments.isLoggedIn)
@@ -59,6 +61,28 @@ class MediaDetailsViewModel(
                     )
                 )
             }
+        }
+    }
+
+    override fun changeNotificationAllowance(type: NotificationType, value: Boolean) {
+        mutableUiState.update {
+            when (type) {
+                NotificationType.START -> it.copy(allowStartNotifications = value)
+                NotificationType.AIRING -> it.copy(allowAiringNotifications = value)
+                NotificationType.END -> it.copy(allowEndNotifications = value)
+            }
+        }
+    }
+
+    override suspend fun writeNotificationAllowanceToDatabase() {
+        with(mutableUiState.value) {
+            animeNotificationsRepository.upsertNotification(
+                animeId = arguments.id,
+                allowStartAiring = allowStartNotifications,
+                allowAiringEpisode = allowAiringNotifications,
+                allowFinishAiring = allowEndNotifications,
+                episodeCount = details?.basicMediaDetails?.episodes
+            )
         }
     }
 

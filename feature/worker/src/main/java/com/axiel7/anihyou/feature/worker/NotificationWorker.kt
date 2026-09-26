@@ -19,6 +19,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.axiel7.anihyou.core.base.APP_PACKAGE_NAME
 import com.axiel7.anihyou.core.base.DataResult
+import com.axiel7.anihyou.core.domain.repository.AnimeNotificationsRepository
 import com.axiel7.anihyou.core.domain.repository.DefaultPreferencesRepository
 import com.axiel7.anihyou.core.domain.repository.NotificationRepository
 import com.axiel7.anihyou.core.domain.repository.UserRepository
@@ -43,6 +44,7 @@ class NotificationWorker(
     private val userRepository: UserRepository,
     private val notificationsRepository: NotificationRepository,
     private val defaultPreferencesRepository: DefaultPreferencesRepository,
+    private val animeNotificationsRepository: AnimeNotificationsRepository,
     private val networkVariables: NetworkVariables,
 ) : CoroutineWorker(context, params) {
 
@@ -102,9 +104,35 @@ class NotificationWorker(
                             applicationContext.getBitmapFromUrl(url)
                         }
 
-                        val localizedText = runCatching {
-                            it.localizedText(applicationContext.resources)
-                        }.getOrDefault(it.text)
+                        val notificationAllowances = animeNotificationsRepository.getAnimeNotificationById(it.contentId)
+                        val localizedText = if (type?.asGroup() == NotificationTypeGroup.AIRING) {
+                            val allowStartAiring = notificationAllowances?.allowStartAiring ?: true
+                            val allowNewAiring = notificationAllowances?.allowNewEpisode ?: true
+                            val allowFinishAiring = notificationAllowances?.allowFinishAiring ?: false
+
+                            if (!allowStartAiring && !allowNewAiring && !allowFinishAiring) {
+                                return@forEach // no notification allowed for the media
+                            }
+
+                            runCatching {
+                                it.localizedText(
+                                    applicationContext.resources,
+                                    startNotification = allowStartAiring,
+                                    airingNotification = allowNewAiring,
+                                    endNotification = allowFinishAiring,
+                                    episodeCount = notificationAllowances?.episodeCount,
+                                )
+                            }.getOrDefault(it.text)
+                        } else {
+                            runCatching {
+                                it.localizedText(applicationContext.resources)
+                            }.getOrDefault(it.text)
+                        } ?: return@forEach
+
+                        // delete if the media is finished airing
+                        if (it.numEpisode() == notificationAllowances?.episodeCount) {
+                            animeNotificationsRepository.deleteNotificationById(it.contentId)
+                        }
 
                         applicationContext.showNotification(
                             notificationId = it.id,
