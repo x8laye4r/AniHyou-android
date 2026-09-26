@@ -10,7 +10,7 @@ class AnimeNotificationsRepository(
     suspend fun getAnimeNotificationById(
         animeId: Int
     ) = dao
-        .getAnimeById(
+        .getByAnimeId(
             animeId = animeId
         )
 

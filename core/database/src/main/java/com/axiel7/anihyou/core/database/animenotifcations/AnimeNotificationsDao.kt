@@ -20,5 +20,5 @@ interface AnimeNotificationsDao {
     suspend fun getAllNotifications(): List<AnimeNotifications>
 
     @Query("SELECT * FROM anime_notifications WHERE animeId = :animeId")
-    suspend fun getAnimeById(animeId: Int): AnimeNotifications?
+    suspend fun getByAnimeId(animeId: Int): AnimeNotifications?
 }
