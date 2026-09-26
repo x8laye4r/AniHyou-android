@@ -74,15 +74,17 @@ class MediaDetailsViewModel(
         }
     }
 
-    override suspend fun writeNotificationAllowanceToDatabase() {
+    override fun writeNotificationAllowanceToDatabase() {
         with(mutableUiState.value) {
-            animeNotificationsRepository.upsertNotification(
-                animeId = arguments.id,
-                allowStartAiring = allowStartNotifications,
-                allowAiringEpisode = allowAiringNotifications,
-                allowFinishAiring = allowEndNotifications,
-                episodeCount = details?.basicMediaDetails?.episodes
-            )
+            viewModelScope.launch {
+                animeNotificationsRepository.upsertNotification(
+                    animeId = arguments.id,
+                    allowStartAiring = allowStartNotifications,
+                    allowAiringEpisode = allowAiringNotifications,
+                    allowFinishAiring = allowEndNotifications,
+                    episodeCount = details?.basicMediaDetails?.episodes
+                )
+            }
         }
     }
 

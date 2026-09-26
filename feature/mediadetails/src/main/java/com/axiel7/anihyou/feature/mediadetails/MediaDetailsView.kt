@@ -230,9 +230,7 @@ private fun MediaDetailsContent(
         ModalBottomSheet(
             onDismissRequest = {
                 showNotificationSheet = false
-                scope.launch {
-                    event?.writeNotificationAllowanceToDatabase()
-                }
+                event?.writeNotificationAllowanceToDatabase()
             },
         ) {
             AiringNotificationType.entries.fastForEachIndexed { index, type ->
