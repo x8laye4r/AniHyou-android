@@ -58,7 +58,7 @@ corePerfromance = "1.0.0"
 immutable = "0.5.2"
 stabilityAnalyzer = "0.15.0"
 room = "3.0.3"
-ksp = "2.3.10"
+ksp = "2.3.12"
 
 [libraries]
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
@@ -139,7 +139,6 @@ collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-im
 compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }
 androidx-room-runtime = { module = "androidx.room3:room3-runtime", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room3:room3-compiler", version.ref = "room" }
-
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
