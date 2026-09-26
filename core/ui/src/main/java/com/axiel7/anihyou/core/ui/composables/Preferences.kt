@@ -190,7 +190,7 @@ fun SwitchPreference(
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .clickable {
+                .clickable(enabled = enabled) {
                     onValueChange(preferenceValue?.not() ?: false)
                 }
                 .padding(vertical = verticalPadding),
