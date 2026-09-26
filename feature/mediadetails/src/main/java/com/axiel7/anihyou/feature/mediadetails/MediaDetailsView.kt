@@ -69,6 +69,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastForEachIndexed
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.axiel7.anihyou.core.base.CUSTOM_URL_NAME_PLACEHOLDER
@@ -234,28 +235,19 @@ private fun MediaDetailsContent(
                 }
             },
         ) {
-            SwitchPreference(
-                title = stringResource(R.string.allow_start_notification),
-                preferenceValue = uiState.allowStartNotifications,
-                onValueChange = { event?.changeNotificationAllowance(NotificationType.START, it) },
-                icon = R.drawable.notifications_24,
-                shape = topShape,
-            )
-            SwitchPreference(
-                title = stringResource(R.string.allow_airing_notification),
-                preferenceValue = uiState.allowAiringNotifications,
-                onValueChange = { event?.changeNotificationAllowance(NotificationType.AIRING, it) },
-                icon = R.drawable.notifications_24,
-                shape = middleShape,
-            )
-            SwitchPreference(
-                title = stringResource(R.string.allow_end_notification),
-                preferenceValue = uiState.allowEndNotifications,
-                onValueChange = { event?.changeNotificationAllowance(NotificationType.END, it) },
-                icon = R.drawable.notifications_24,
-                enabled = uiState.details?.basicMediaDetails?.episodes != null,
-                shape = bottomShape,
-            )
+            AiringNotificationType.entries.fastForEachIndexed { index, type ->
+                SwitchPreference(
+                    title = type.localized(),
+                    preferenceValue = uiState.allowNotifications(type),
+                    onValueChange = { event?.changeNotificationAllowance(type, it) },
+                    icon = type.icon,
+                    shape = when (index) {
+                        0 -> topShape
+                        AiringNotificationType.entries.size - 1 -> bottomShape
+                        else -> middleShape
+                    },
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
         }
     }

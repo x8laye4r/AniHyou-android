@@ -21,6 +21,6 @@ interface MediaDetailsEvent : UiEvent {
     fun hideVoiceActorSheet()
     fun onVoteClick(recommendedMediaId: Int, recommendationId: Int, rating: RecommendationRating)
     fun addRecommendation(media: MediaRecommended)
-    fun changeNotificationAllowance(type: NotificationType, value: Boolean)
+    fun changeNotificationAllowance(type: AiringNotificationType, value: Boolean)
     suspend fun writeNotificationAllowanceToDatabase()
 }

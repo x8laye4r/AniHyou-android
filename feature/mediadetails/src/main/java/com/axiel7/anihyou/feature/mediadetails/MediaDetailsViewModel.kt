@@ -64,12 +64,12 @@ class MediaDetailsViewModel(
         }
     }
 
-    override fun changeNotificationAllowance(type: NotificationType, value: Boolean) {
+    override fun changeNotificationAllowance(type: AiringNotificationType, value: Boolean) {
         mutableUiState.update {
             when (type) {
-                NotificationType.START -> it.copy(allowStartNotifications = value)
-                NotificationType.AIRING -> it.copy(allowAiringNotifications = value)
-                NotificationType.END -> it.copy(allowEndNotifications = value)
+                AiringNotificationType.START -> it.copy(allowStartNotifications = value)
+                AiringNotificationType.AIRING -> it.copy(allowAiringNotifications = value)
+                AiringNotificationType.END -> it.copy(allowEndNotifications = value)
             }
         }
     }

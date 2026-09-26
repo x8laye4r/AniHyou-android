@@ -72,6 +72,12 @@ data class MediaDetailsUiState(
 
     val hasSpoilerTags = details?.tags?.any { it?.isMediaSpoiler == true } ?: false
 
+    fun allowNotifications(type: AiringNotificationType) = when (type) {
+        AiringNotificationType.START -> allowStartNotifications
+        AiringNotificationType.AIRING -> allowAiringNotifications
+        AiringNotificationType.END -> allowEndNotifications
+    }
+
     override fun setError(value: String?) = copy(error = value)
     override fun setLoading(value: Boolean) = copy(isLoading = value)
 }
